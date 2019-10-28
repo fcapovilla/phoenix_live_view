@@ -49,6 +49,19 @@ defmodule Phoenix.LiveView.ParamsTest do
              |> redirected_to() == "/"
     end
 
+    test "hard redirects with flash", %{conn: conn} do
+      conn =
+        conn
+        |> put_serialized_session(
+          :on_handle_params,
+          &{:stop, &1 |> LiveView.put_flash(:info, "INFO") |> LiveView.redirect(to: "/")}
+        )
+        |> get("/counter/123?from=handle_params")
+
+      assert redirected_to(conn) == "/"
+      assert Phoenix.Controller.get_flash(conn, :info) == "INFO"
+    end
+
     test "internal live redirects", %{conn: conn} do
       assert conn
              |> put_serialized_session(:on_handle_params, fn socket ->
@@ -133,22 +146,24 @@ defmodule Phoenix.LiveView.ParamsTest do
 
     test "raises on stop without redirect", %{conn: conn} do
       assert ExUnit.CaptureLog.capture_log(fn ->
-        pid = spawn(fn ->
-          conn
-          |> put_serialized_session(:on_handle_params, fn socket ->
-            if LiveView.connected?(socket) do
-              {:stop, socket}
-            else
-              {:noreply, socket}
-            end
-          end)
-          |> get("/counter/123?from=handle_params")
-          |> live()
-        end)
-        ref = Process.monitor(pid)
+               pid =
+                 spawn(fn ->
+                   conn
+                   |> put_serialized_session(:on_handle_params, fn socket ->
+                     if LiveView.connected?(socket) do
+                       {:stop, socket}
+                     else
+                       {:noreply, socket}
+                     end
+                   end)
+                   |> get("/counter/123?from=handle_params")
+                   |> live()
+                 end)
 
-        assert_receive {:DOWN, ^ref, :process, _, _}
-      end) =~ ~r"attempted to stop socket without redirecting"
+               ref = Process.monitor(pid)
+
+               assert_receive {:DOWN, ^ref, :process, _, _}
+             end) =~ ~r"attempted to stop socket without redirecting"
     end
   end
 

@@ -16,6 +16,8 @@ defmodule Phoenix.LiveViewTest.Endpoint do
     conn
     |> Plug.Parsers.call(@parsers)
     |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
+    |> Plug.Test.init_test_session(%{})
+    |> Phoenix.LiveView.Flash.call([signign_salt: config(:live_view)[:signing_salt]])
     |> Phoenix.LiveViewTest.Router.call([])
   end
 end
