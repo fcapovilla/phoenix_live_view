@@ -39,11 +39,23 @@ defmodule Phoenix.LiveView.Controller do
         |> LiveView.Plug.put_cache_headers()
         |> Phoenix.Controller.render("template.html", %{content: content})
 
-      {:stop, {:redirect, opts}} ->
-        Phoenix.Controller.redirect(conn, to: Map.fetch!(opts, :to))
+      {:stop, {{:redirect, opts}, flash}} ->
+        conn
+        |> maybe_put_flash(flash)
+        |> Phoenix.Controller.redirect(to: Map.fetch!(opts, :to))
 
-      {:stop, {:live, opts}} ->
-        Phoenix.Controller.redirect(conn, to: Map.fetch!(opts, :to))
+      {:stop, {{:live, opts}, flash}} ->
+        conn
+        |> maybe_put_flash(flash)
+        |> Phoenix.Controller.redirect(to: Map.fetch!(opts, :to))
     end
+  end
+
+  defp maybe_put_flash(conn, nil), do: conn
+
+  defp maybe_put_flash(conn, %{} = flash) do
+    Enum.reduce(flash, conn, fn {kind, msg}, acc ->
+      Phoenix.Controller.put_flash(acc, kind, msg)
+    end)
   end
 end

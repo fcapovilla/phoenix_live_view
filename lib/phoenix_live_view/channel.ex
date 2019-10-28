@@ -198,7 +198,7 @@ defmodule Phoenix.LiveView.Channel do
         View.raise_bad_stop_and_live_redirect!()
 
       {:redirect, opts} ->
-        {:redirect, opts, %{state | socket: new_socket}}
+        {:redirect, put_flash(state, opts), %{state | socket: new_socket}}
 
       nil ->
         View.raise_bad_stop_and_no_redirect!()

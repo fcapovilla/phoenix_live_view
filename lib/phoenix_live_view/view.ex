@@ -482,8 +482,8 @@ defmodule Phoenix.LiveView.View do
       {:noreply, %Socket{redirected: nil} = new_socket} ->
         {:ok, new_socket}
 
-      {:noreply, %Socket{redirected: redirected}} ->
-        {:stop, redirected}
+      {:noreply, %Socket{redirected: redirected} = socket} ->
+        {:stop, {redirected, get_flash(socket)}}
 
       {:stop, %Socket{redirected: nil}} ->
         raise_bad_stop_and_no_redirect!()
@@ -492,7 +492,7 @@ defmodule Phoenix.LiveView.View do
         raise_bad_stop_and_live_redirect!()
 
       {:stop, %Socket{redirected: redirected}} ->
-        {:stop, redirected}
+        {:stop, {redirected, get_flash(socket)}}
     end
   end
 
