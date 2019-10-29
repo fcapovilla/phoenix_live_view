@@ -143,6 +143,18 @@ defmodule Phoenix.LiveView.ComponentTest do
     test "render only" do
       assert render_component(RenderOnlyComponent, %{from: "test"}) =~ "RENDER ONLY test"
     end
+
+    test "preloads", %{conn: conn} do
+      conn =
+        conn
+        |> Plug.Test.init_test_session(%{from: self()})
+        |> get("/components")
+
+      assert_receive {:preload, [%{id: "chris"}, %{id: "jose"}]}
+
+      {:ok, _view, _html} = live(conn)
+      assert_receive {:preload, [%{id: "chris"}, %{id: "jose"}]}
+    end
   end
 
   describe "send_update" do

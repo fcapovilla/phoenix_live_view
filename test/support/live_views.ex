@@ -393,8 +393,8 @@ defmodule Phoenix.LiveViewTest.WithComponentLive do
     """
   end
 
-  def mount(%{names: names}, socket) do
-    {:ok, assign(socket, names: names, from: nil)}
+  def mount(%{names: names} = session, socket) do
+    {:ok, assign(socket, names: names, from: session[:from])}
   end
 
   def handle_info({:send_update, updates}, socket) do

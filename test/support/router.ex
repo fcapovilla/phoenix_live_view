@@ -2,7 +2,7 @@ defmodule Phoenix.LiveViewTest.Controller do
   use Phoenix.Controller
   import Phoenix.LiveView.Controller
 
-  plug :put_layout, false  
+  plug :put_layout, false
 
   def incoming(conn, %{"type" => "live-render-2"}) do
     live_render(conn, Phoenix.LiveViewTest.DashboardLive)
@@ -43,6 +43,6 @@ defmodule Phoenix.LiveViewTest.Router do
     live "/opts", OptsLive, session: [:opts]
     live "/time-zones", AppendLive, session: [:time_zones]
     live "/shuffle", ShuffleLive, session: [:time_zones]
-    live "/components", WithComponentLive, session: [:names]
+    live "/components", WithComponentLive, session: [:names, :from]
   end
 end
