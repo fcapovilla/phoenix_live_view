@@ -782,19 +782,14 @@ export let DOM = {
     target.dispatchEvent(event)
   },
 
-  cloneNode(node, html){
-    let cloned = node.cloneNode()
-    cloned.innerHTML = html || node.innerHTML
-    return cloned
-  },
-
   // builds container for morphdom patch
   // - precomputes append/prepend content in diff node to make it appear as if
   //   the contents had been appended/prepended on full child node list
   // - precomputes updates on existing child ids within a prepend/append child list
   //   to allow existing nodes to be updated in place rather than reordered
   buildDiffContainer(container, html, phxUpdate){
-    let diffContainer = this.cloneNode(container, html)
+    let diffContainer = document.createElement("div")
+    diffContainer.innerHTML = html
     let elementsOnly = child => child.nodeType === Node.ELEMENT_NODE
     let idsOnly = child => child.id || logError("append/prepend children require IDs, got: ", child)
 
@@ -802,19 +797,17 @@ export let DOM = {
       let id = el.id || logError("append/prepend requires an ID, got: ", el)
       let existingInContainer = container.querySelector(`#${id}`)
       if(!existingInContainer){ return }
-      let existing = this.cloneNode(existingInContainer)
+      let existing = existingInContainer.cloneNode(true)
       let updateType = el.getAttribute(phxUpdate)
       let newIds = Array.from(el.childNodes).filter(elementsOnly).map(idsOnly)
-      let existingIds = Array.from(existing.childNodes).filter(elementsOnly).map(idsOnly)
+      let existingIds = new Set(Array.from(existing.childNodes).filter(elementsOnly).map(idsOnly))
 
-      if(newIds.toString() !== existingIds.toString()){
-        let dupIds = newIds.filter(id => existingIds.indexOf(id) >= 0)
-        dupIds.forEach(id => {
-          let updatedEl = el.querySelector(`#${id}`)
-          existing.querySelector(`#${id}`).replaceWith(updatedEl)
-        })
-        el.insertAdjacentHTML(updateType === "append" ? "afterbegin" : "beforeend", existing.innerHTML)
-      }
+      let dupIds = newIds.filter(id => existingIds.has(id))
+      dupIds.forEach(id => {
+        let updatedEl = el.querySelector(`#${id}`)
+        existing.querySelector(`#${id}`).replaceWith(updatedEl)
+      })
+      el.insertAdjacentHTML(updateType === "append" ? "afterbegin" : "beforeend", existing.innerHTML)
     })
 
     return diffContainer
